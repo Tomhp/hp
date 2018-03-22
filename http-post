@@ -1,0 +1,70 @@
+public class HttpsClient extends DefaultHttpClient {
+	
+	 public HttpsClient() throws Exception{  
+	     super();  
+	     SSLContext ctx = SSLContext.getInstance("TLS");  
+	     X509TrustManager tm = new X509TrustManager() {  
+	         @Override  
+	         public void checkClientTrusted(X509Certificate[] chain,  
+	              String authType) throws CertificateException {  
+	         }  
+	         @Override  
+	         public void checkServerTrusted(X509Certificate[] chain,  
+	              String authType) throws CertificateException {  
+	         }  
+	         @Override  
+	         public X509Certificate[] getAcceptedIssuers() {  
+	              return null;  
+	         }  
+	     };  
+	     ctx.init(null, new TrustManager[] { tm }, null);  
+	     SSLSocketFactory ssf = new SSLSocketFactory(ctx);  
+	     ssf.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+	     ClientConnectionManager ccm = this.getConnectionManager();  
+	     SchemeRegistry sr = ccm.getSchemeRegistry();  
+	     sr.register(new Scheme("https", ssf, 443));         
+	 }  
+}
+
+
+public static String sendQueryMessagePost(String url, String queryMessage) throws Exception {
+		BufferedReader br = null;
+		try {
+			HttpPost httpPost = new HttpPost(url);   
+	        httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json"); 
+	        StringEntity se = new StringEntity(queryMessage, "utf-8");
+	        se.setContentType("test/json");
+	        se.setContentEncoding(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+	        httpPost.setEntity(se);
+	        
+	        HttpClient httpclient = null;
+			if (url.startsWith("https://")) {
+				httpclient = new HttpsClient();
+			} else {
+	        	httpclient = new DefaultHttpClient(); 
+			}
+			
+	    	HttpResponse response = httpclient.execute(httpPost);  
+	        StringBuffer sb = new StringBuffer();
+	        br = new BufferedReader(
+	                new InputStreamReader(response.getEntity().getContent(), "utf-8"));
+	        String line = null;
+	        while ((line = br.readLine()) != null) {
+	            sb.append(line);
+	        }
+	        br.close();
+	        br = null;
+	        return sb.toString();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (CommonUtil.isNotEmpty(br)) {
+				try {
+					br.close();
+					br = null;
+				} catch (Exception e) {
+					throw e;
+				}
+			}
+		}
+	}
