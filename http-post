@@ -1,5 +1,6 @@
 public class HttpsClient extends DefaultHttpClient {
-	
+
+
 	 public HttpsClient() throws Exception{  
 	     super();  
 	     SSLContext ctx = SSLContext.getInstance("TLS");  
